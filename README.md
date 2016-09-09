@@ -32,6 +32,14 @@ With the following instructions the add-on files will be placed in `../../xbmc/a
 4. `cmake -DADDONS_TO_BUILD={addon-id} -DADDON_SRC_PREFIX=../.. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../../xbmc/addons -DPACKAGE_ZIP=1 ../../xbmc/project/cmake/addons`
 5. `make`
 
+### OSX with Xcode
+
+1. `git clone https://github.com/xbmc/xbmc.git`
+2. `git clone https://github.com/{org}/{addon-id}.git`
+3. `cd {addon-id} && mkdir build && cd build`
+4. `cmake -G "Xcode" -DADDONS_TO_BUILD={addon-id} -DADDON_SRC_PREFIX=<fullPath to Kodi>  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=<full path to where your addon should be build> -DPACKAGE_ZIP=1 <full path>/Kodi/project/cmake/addons`
+5. 'make' won't work, so build an run '../Kodi/adsp.basic/build/kodi-addons.xcodeproj' in xcode.
+
 ### Windows
 
 Use the visual studio command line or run `call "%VS120COMNTOOLS%..\..\VC\bin\vcvars32.bat"`
