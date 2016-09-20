@@ -32,6 +32,7 @@ using namespace ADDON;
 
 #define BUTTON_OK                                 1
 #define BUTTON_CANCEL                             2
+#define BOTTON_ONOFF                              3
 
 #define SPIN_CONTROL_SPEAKER_DISTANCE_UNIT       10
 #define SPIN_CONTROL_SPEAKER_DISTANCE_UNIT_INFO  12
@@ -183,6 +184,7 @@ bool CGUIDialogSpeakerDistance::OnInit()
   m_window->SetControlLabel(SPIN_CONTROL_SPEAKER_DISTANCE_UNIT_INFO, "");
 
   SetDistanceSpins(DELAY_UNIT_METER);
+
   return true;
 }
 

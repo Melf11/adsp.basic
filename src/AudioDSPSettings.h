@@ -75,7 +75,9 @@ struct sDSPSettings
   };
 
   sDSPChannel           m_channels[AE_DSP_CH_MAX];
-  sDSPFreeSurround      m_FreeSurround;
+    sDSPChannel         m_channelFL[AE_DSP_CH_FL];
+    sDSPChannel         m_channelFR[AE_DSP_CH_FR];
+    sDSPFreeSurround      m_FreeSurround;
 };
 
 class CDSPSettings

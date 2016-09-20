@@ -96,7 +96,7 @@ cDSPProcessorStream::~cDSPProcessorStream()
 
 AE_DSP_ERROR cDSPProcessorStream::StreamCreate(const AE_DSP_SETTINGS *settings, const AE_DSP_STREAM_PROPERTIES *pProperties)
 {
-    int presentFlag;
+    //int presentFlag;
     
     AE_DSP_ERROR err = AE_DSP_ERROR_NO_ERROR;
     
@@ -179,8 +179,6 @@ AE_DSP_ERROR cDSPProcessorStream::StreamIsModeSupported(AE_DSP_MODE_TYPE mode_ty
     if (mode_type == AE_DSP_MODE_TYPE_POST_PROCESS)
     {
         if (mode_id == ID_POST_PROCESS_SPEAKER_CORRECTION)
-            return AE_DSP_ERROR_NO_ERROR;
-        if (mode_id == ID_POST_PROCESS_STEREO_TO_MS)
             return AE_DSP_ERROR_NO_ERROR;
     }
     
@@ -461,30 +459,35 @@ void cDSPProcessorStream::PostProcessChannelSample(AE_DSP_CHANNEL channel, float
 
 
 ////////////////////////////////////////////////
+////////////////////////////////////////////////
+////////////////////////////////////////////////
 ////////////    STEREO TO MS    ////////////////
 ////////////////////////////////////////////////
+////////////////////////////////////////////////
+////////////////////////////////////////////////
 /*
-
-unsigned int  cDSPProcessorStream::PostProcessStereoToMS(*//*unsigned int modeId, *//*float **array_in, float **array_out, unsigned int samples)
+unsigned int  cDSPProcessorStream::PostProcessStereoToMS(unsigned int mode_id, float **array_in, float **array_out, unsigned int samples)
 {
-    // if (modeId == ID_POST_PROCESS_STEREO_TO_MS)
-    // {
-    
-    for (unsigned pos = 0; pos < samples; pos++)
+    if (mode_id == ID_POST_PROCESS_STEREO_TO_MS)
     {
-        
-        array_out[AE_DSP_CH_FL][pos] = array_in[AE_DSP_CH_FL][pos]*0.5 + array_in[AE_DSP_CH_FR][pos]*0.5; //Mid Channel written into the regular Left Channel
-        array_out[AE_DSP_CH_FR][pos] = array_in[AE_DSP_CH_FL][pos]*0.5 - array_in[AE_DSP_CH_FR][pos]*0.5; //Side Channel written into the regulat Right Channel
-        
+        for (unsigned pos = 0; pos < samples; pos++)
+        {
+            
+            array_out[AE_DSP_CH_FL][pos] = array_in[AE_DSP_CH_FL][pos]*0.5 + array_in[AE_DSP_CH_FR][pos]*0.5; //Mid Channel written into the regular Left Channel
+            array_out[AE_DSP_CH_FR][pos] = array_in[AE_DSP_CH_FL][pos]*0.5 - array_in[AE_DSP_CH_FR][pos]*0.5; //Side Channel written into the regulat Right Channel
+            
+        }
     }
-    // }
     return samples;
     
 }
 */
-
+////////////////////////////////////////////////
+////////////////////////////////////////////////
 ////////////////////////////////////////////////
 ////////////    END STEREO TO MS    ////////////
+////////////////////////////////////////////////
+////////////////////////////////////////////////
 ////////////////////////////////////////////////
 
 
@@ -495,8 +498,6 @@ unsigned int cDSPProcessorStream::PostProcess(unsigned int modeId, float **array
      * to one point identified by modeId. To have this hack working the distance correction must be enabled.
      * Normally my post processing must be used as only one post process mode (Speaker correction)
      */
-    
-    
     if (modeId == ID_POST_PROCESS_SPEAKER_CORRECTION)
     {
         if (m_SoundTest)
@@ -550,29 +551,6 @@ unsigned int cDSPProcessorStream::PostProcess(unsigned int modeId, float **array
                 PostProcessChannelSample(AE_DSP_CH_BROC, array_out, pos);
         }
     }
-    
-    
-    ////////////////////////////////////////////////
-    ////////////    STEREO TO MS    ////////////////
-    ////////////////////////////////////////////////
-    
-    
-    if (modeId == ID_POST_PROCESS_STEREO_TO_MS)
-    {
-        for (unsigned pos = 0; pos < samples; pos++)
-        {
-            
-            array_out[AE_DSP_CH_FL][pos] = array_in[AE_DSP_CH_FL][pos]*0.5 + array_in[AE_DSP_CH_FR][pos]*0.5; //Mid Channel written into the regular Left Channel
-            array_out[AE_DSP_CH_FR][pos] = array_in[AE_DSP_CH_FL][pos]*0.5 - array_in[AE_DSP_CH_FR][pos]*0.5; //Side Channel written into the regulat Right Channel
-            
-        }
-    }
-    
-    ////////////////////////////////////////////////
-    ////////////    STEREO TO MS    ////////////////
-    ////////////////////////////////////////////////
-    
-    
     return samples;
 }
 
@@ -626,6 +604,9 @@ void cDSPProcessorStream::UpdateDelay(AE_DSP_CHANNEL channel)
         m_Delay[channel] = NULL;
     }
 }
+
+
+
 
 void cDSPProcessorStream::SetTestSound(AE_DSP_CHANNEL channel, int mode, CGUIDialogSpeakerGain *cbClass, bool continues)
 {
@@ -741,8 +722,6 @@ bool cDSPProcessor::InitDSP()
         m_SpeakerDelay[i] = 0;
     
     m_SpeakerCorrection = false;
-    m_StereoToMS = false;
-    
     
     CDSPSettings settings;
     settings.LoadSettingsData(-1, true);
@@ -756,7 +735,7 @@ bool cDSPProcessor::InitDSP()
             m_SpeakerDelayMax = m_SpeakerDelay[i];
     }
     
-    AE_DSP_MENUHOOK hookSpeakerCorrection;
+    AE_DSP_MENUHOOK hook;
     
     /* Read setting "speaker_correction" from settings.xml */
     if (!KODI->GetSetting("speaker_correction", &m_SpeakerCorrection))
@@ -765,65 +744,79 @@ bool cDSPProcessor::InitDSP()
         KODI->Log(LOG_ERROR, "Couldn't get 'speaker_correction' setting, falling back to 'true' as default");
         m_SpeakerCorrection = true;
     }
-  
     if (m_SpeakerCorrection)
     {
-        hookSpeakerCorrection.iHookId            = ID_MENU_SPEAKER_GAIN_SETUP;
-        hookSpeakerCorrection.category           = AE_DSP_MENUHOOK_POST_PROCESS;
-        hookSpeakerCorrection.iLocalizedStringId = 30011;
-        hookSpeakerCorrection.iRelevantModeId    = ID_POST_PROCESS_SPEAKER_CORRECTION;
-        hookSpeakerCorrection.bNeedPlayback      = false;
-        ADSP->AddMenuHook(&hookSpeakerCorrection);
+        hook.iHookId            = ID_MENU_SPEAKER_GAIN_SETUP;
+        hook.category           = AE_DSP_MENUHOOK_POST_PROCESS;
+        hook.iLocalizedStringId = 30011;
+        hook.iRelevantModeId    = ID_POST_PROCESS_SPEAKER_CORRECTION;
+        hook.bNeedPlayback      = false;
+        ADSP->AddMenuHook(&hook);
         
-        hookSpeakerCorrection.iHookId            = ID_MENU_SPEAKER_DISTANCE_SETUP;
-        hookSpeakerCorrection.category           = AE_DSP_MENUHOOK_POST_PROCESS;
-        hookSpeakerCorrection.iLocalizedStringId = 30012;
-        hookSpeakerCorrection.iRelevantModeId    = ID_POST_PROCESS_SPEAKER_CORRECTION;
-        hookSpeakerCorrection.bNeedPlayback      = false;
-        ADSP->AddMenuHook(&hookSpeakerCorrection);
-        
-    }
-    
-    ////////////////////////////////////////////////
-    ////////////    STEREO TO MS    ////////////////
-    ////////////////////////////////////////////////
-    
-    AE_DSP_MENUHOOK hookStereoToMS;
-    
-    /* Read setting "stereo_to_ms" from settings.xml */
-    
-    if (!KODI->GetSetting("stereo_to_ms", &m_StereoToMS))
-    {
-        /* If setting is unknown fallback to defaults */
-        KODI->Log(LOG_ERROR, "Couldn't get 'stereo_to_ms' setting, falling back to 'true' as default");
-        m_StereoToMS = true;
-    }
-    
-    
-    else if (m_StereoToMS)
-    {
-        hookStereoToMS.iHookId            = ID_MENU_STEREO_TO_MS;
-        hookStereoToMS.category           = AE_DSP_MENUHOOK_POST_PROCESS;
-        hookStereoToMS.iLocalizedStringId = 30013;
-        hookStereoToMS.bNeedPlayback      = false;
-        ADSP->AddMenuHook(&hookStereoToMS);
-        
-    }
+        hook.iHookId            = ID_MENU_SPEAKER_DISTANCE_SETUP;
+        hook.category           = AE_DSP_MENUHOOK_POST_PROCESS;
+        hook.iLocalizedStringId = 30012;
+        hook.iRelevantModeId    = ID_POST_PROCESS_SPEAKER_CORRECTION;
+        hook.bNeedPlayback      = false;
+        ADSP->AddMenuHook(&hook);
 
-    ////////////////////////////////////////////////
-    ////////////    STEREO TO MS    ////////////////
-    ////////////////////////////////////////////////
-
+        
+        
+    }
     
     /* Read setting "master_stereo" from settings.xml */
-    bool enable = false;
-    if (!KODI->GetSetting("master_stereo", &enable))
+    bool enableA = false;
+    if (!KODI->GetSetting("master_stereo", &enableA))
     {
         /* If setting is unknown fallback to defaults */
         KODI->Log(LOG_ERROR, "Couldn't get 'master_stereo' setting, falling back to 'true' as default");
-        enable = true;
+        enableA = true;
     }
-    EnableMasterProcessor(ID_MASTER_PROCESS_STEREO_DOWNMIX, enable);
+    
+    
+    
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////    STEREO TO MS    ////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    
+    
+/*
+    
+    bool enableB = false;
+    if (!KODI->GetSetting("stereo_to_ms", &enableB))
+    {
+        /* If setting is unknown fallback to defaults */
+/*        KODI->Log(LOG_ERROR, "Couldn't get 'stereo_to_ms' setting, falling back to 'true' as default");
+        enableB = true;
+        
+        
+        hook.iHookId            = ID_MENU_STEREO_TO_MS;
+        hook.category           = AE_DSP_MENUHOOK_POST_PROCESS;
+        hook.iLocalizedStringId = 30013;
+       // hook.iRelevantModeId    = ID_POST_PROCESS_SPEAKER_CORRECTION;
+        hook.bNeedPlayback      = false;
+        ADSP->AddMenuHook(&hook);
+        *//*
+        
+    }
+    
+*/
+    
+    
+    
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////    STEREO TO MS    ////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    
+    EnableMasterProcessor(ID_MASTER_PROCESS_STEREO_DOWNMIX, enableA);
     
     struct AE_DSP_MODES::AE_DSP_MODE modeInfoStruct;
     modeInfoStruct.iModeType              = AE_DSP_MODE_TYPE_POST_PROCESS;
@@ -842,23 +835,45 @@ bool cDSPProcessor::InitDSP()
     ADSP->RegisterMode(&modeInfoStruct);
     
     
-    struct AE_DSP_MODES::AE_DSP_MODE modeInfoStructa;
-    modeInfoStructa.iModeType              = AE_DSP_MODE_TYPE_POST_PROCESS;
-    modeInfoStructa.iUniqueDBModeId        = -1;         // set by RegisterMode
-    modeInfoStructa.iModeNumber            = ID_POST_PROCESS_STEREO_TO_MS;
-    modeInfoStructa.bHasSettingsDialog     = true;
-    modeInfoStructa.iModeDescription       = 30009;
-    modeInfoStructa.iModeHelp              = -1;
-    modeInfoStructa.iModeName              = 30008;
-    modeInfoStructa.iModeSetupName         = -1;
-    modeInfoStructa.iModeSupportTypeFlags  = AE_DSP_PRSNT_ASTREAM_BASIC | AE_DSP_PRSNT_ASTREAM_MUSIC | AE_DSP_PRSNT_ASTREAM_MOVIE;
-    strncpy(modeInfoStructa.strModeName, "Stereo to MS", sizeof(modeInfoStructa.strModeName) - 1);
-    memset(modeInfoStructa.strOwnModeImage, 0, sizeof(modeInfoStructa.strOwnModeImage)); // unused
-    memset(modeInfoStructa.strOverrideModeImage, 0, sizeof(modeInfoStructa.strOverrideModeImage)); // unused
-    
-    ADSP->RegisterMode(&modeInfoStructa);
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////    STEREO TO MS    ////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
     
     
+    /*
+    
+    EnableMasterProcessor(ID_POST_PROCESS_STEREO_TO_MS, enableB);
+    
+    struct AE_DSP_MODES::AE_DSP_MODE modeInfoStructB;
+    modeInfoStructB.iModeType              = AE_DSP_MODE_TYPE_POST_PROCESS;
+    modeInfoStructB.iUniqueDBModeId        = -1;         // set by RegisterMode
+    modeInfoStructB.iModeNumber            = ID_POST_PROCESS_STEREO_TO_MS;
+    modeInfoStructB.bHasSettingsDialog     = true;
+    modeInfoStructB.iModeDescription       = 30009;
+    modeInfoStructB.iModeHelp              = -1;
+    modeInfoStructB.iModeName              = 30008;
+    modeInfoStructB.iModeSetupName         = -1;
+    modeInfoStructB.iModeSupportTypeFlags  = AE_DSP_PRSNT_ASTREAM_BASIC | AE_DSP_PRSNT_ASTREAM_MUSIC | AE_DSP_PRSNT_ASTREAM_MOVIE;
+    strncpy(modeInfoStructB.strModeName, "Stereo to MS", sizeof(modeInfoStructB.strModeName) - 1);
+    memset(modeInfoStructB.strOwnModeImage, 0, sizeof(modeInfoStructB.strOwnModeImage)); // unused
+    memset(modeInfoStructB.strOverrideModeImage, 0, sizeof(modeInfoStructB.strOverrideModeImage)); // unused
+    
+    ADSP->RegisterMode(&modeInfoStructB);
+    
+    */
+    
+    
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////    STEREO TO MS    ////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
     
     
     return true;
@@ -914,64 +929,74 @@ ADDON_STATUS cDSPProcessor::SetSetting(const char *settingName, const void *sett
 {
     CLockObject lock(m_Mutex);
     
-    AE_DSP_MENUHOOK hookSpeakerCorrection;
-    AE_DSP_MENUHOOK hookStereoToMS;
+    AE_DSP_MENUHOOK hook;
     
     string str = settingName;
     if (str == "speaker_correction")
     {
-        hookSpeakerCorrection.iHookId            = ID_MENU_SPEAKER_GAIN_SETUP;
-        hookSpeakerCorrection.category           = AE_DSP_MENUHOOK_POST_PROCESS;
-        hookSpeakerCorrection.iLocalizedStringId = 30011;
-        hookSpeakerCorrection.bNeedPlayback      = false;
-        hookSpeakerCorrection.iRelevantModeId    = ID_POST_PROCESS_SPEAKER_CORRECTION;
+        hook.iHookId            = ID_MENU_SPEAKER_GAIN_SETUP;
+        hook.category           = AE_DSP_MENUHOOK_POST_PROCESS;
+        hook.iLocalizedStringId = 30011;
+        hook.bNeedPlayback      = false;
+        hook.iRelevantModeId    = ID_POST_PROCESS_SPEAKER_CORRECTION;
         
         if (m_SpeakerCorrection && !* (bool *) settingValue)
-            ADSP->RemoveMenuHook(&hookSpeakerCorrection);
+            ADSP->RemoveMenuHook(&hook);
         else if (!m_SpeakerCorrection && * (bool *) settingValue)
-            ADSP->AddMenuHook(&hookSpeakerCorrection);
+            ADSP->AddMenuHook(&hook);
         
-        hookSpeakerCorrection.iHookId            = ID_MENU_SPEAKER_DISTANCE_SETUP;
-        hookSpeakerCorrection.category           = AE_DSP_MENUHOOK_POST_PROCESS;
-        hookSpeakerCorrection.iLocalizedStringId = 30012;
-        hookSpeakerCorrection.bNeedPlayback      = false;
-        hookSpeakerCorrection.iRelevantModeId    = ID_POST_PROCESS_SPEAKER_CORRECTION;
+        hook.iHookId            = ID_MENU_SPEAKER_DISTANCE_SETUP;
+        hook.category           = AE_DSP_MENUHOOK_POST_PROCESS;
+        hook.iLocalizedStringId = 30012;
+        hook.bNeedPlayback      = false;
+        hook.iRelevantModeId    = ID_POST_PROCESS_SPEAKER_CORRECTION;
         
         if (m_SpeakerCorrection && !* (bool *) settingValue)
-            ADSP->RemoveMenuHook(&hookSpeakerCorrection);
+            ADSP->RemoveMenuHook(&hook);
         else if (!m_SpeakerCorrection && * (bool *) settingValue)
-            ADSP->AddMenuHook(&hookSpeakerCorrection);
+            ADSP->AddMenuHook(&hook);
+       
+        
+        ////////////////////////////////////////////////
+        ////////////////////////////////////////////////
+        ////////////////////////////////////////////////
+        ////////////    STEREO TO MS    ////////////////
+        ////////////////////////////////////////////////
+        ////////////////////////////////////////////////
+        ////////////////////////////////////////////////
+        
+        /*
+        hook.iHookId            = ID_MENU_STEREO_TO_MS;
+        hook.category           = AE_DSP_MENUHOOK_POST_PROCESS;
+        hook.iLocalizedStringId = 30013;
+        hook.iRelevantModeId    = ID_POST_PROCESS_STEREO_TO_MS;
+        hook.bNeedPlayback      = false;
+        ADSP->AddMenuHook(&hook);
+        
+        if (m_SpeakerCorrection && !* (bool *) settingValue)
+            ADSP->RemoveMenuHook(&hook);
+        else if (!m_SpeakerCorrection && * (bool *) settingValue)
+            ADSP->AddMenuHook(&hook);
+        
         
         KODI->Log(LOG_INFO, "Changed Setting 'speaker_correction' from %u to %u", m_SpeakerCorrection, * (bool *) settingValue);
         m_SpeakerCorrection = * (bool *) settingValue;
+         */
     }
-    
-    ////////////////////////////////////////////////
-    ////////////    STEREO TO MS    ////////////////
-    ////////////////////////////////////////////////
-    
+   /*
     else if (str == "stereo_to_ms")
     {
-        
-        hookStereoToMS.iHookId            = ID_MENU_STEREO_TO_MS;
-        hookStereoToMS.category           = AE_DSP_MENUHOOK_POST_PROCESS;
-        hookStereoToMS.iLocalizedStringId = 30013;
-        hookStereoToMS.bNeedPlayback      = false;
-        
-        if (m_StereoToMS && !* (bool *) settingValue)
-            ADSP->RemoveMenuHook(&hookStereoToMS);
-        else if (!m_StereoToMS && * (bool *) settingValue)
-            ADSP->AddMenuHook(&hookStereoToMS);
-        
-        
-        KODI->Log(LOG_INFO, "Changed Setting 'stereo_to_ms' from %u to %u",
-                  m_StereoToMS, * (bool *) settingValue);
-        m_StereoToMS = * (bool *) settingValue;
+        KODI->Log(LOG_INFO, "Changed Setting 'stereo_to_ms' from %u to %u", IsMasterProcessorEnabled(ID_POST_PROCESS_STEREO_TO_MS), * (bool *) settingValue);
+        EnableMasterProcessor(ID_POST_PROCESS_STEREO_TO_MS, * (bool *) settingValue);
     }
-    
+    */
     
     ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
     ////////////    STEREO TO MS    ////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
     ////////////////////////////////////////////////
     
     
@@ -998,17 +1023,27 @@ AE_DSP_ERROR cDSPProcessor::CallMenuHook(const AE_DSP_MENUHOOK &menuhook, const 
     }
     
     ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
     ////////////    STEREO TO MS    ////////////////
     ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
     
-    else if (menuhook.iHookId == ID_MENU_STEREO_TO_MS && m_StereoToMS)
+    /*
+    else if (menuhook.iHookId == ID_MENU_STEREO_TO_MS && m_SpeakerCorrection)
     {
         CGUIDialogStereoToMS settings(item.data.iStreamId);
         settings.DoModal();
-    }
+    }*/
+    
     
     ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
     ////////////    STEREO TO MS    ////////////////
+    ////////////////////////////////////////////////
+    ////////////////////////////////////////////////
     ////////////////////////////////////////////////
     
     return AE_DSP_ERROR_NO_ERROR;
@@ -1079,3 +1114,4 @@ CDSPProcessMaster *cDSPProcessor::GetProcessMaster(unsigned streamId)
     
     return g_usedDSPs[streamId]->m_MasterCurrrentMode;
 }
+
