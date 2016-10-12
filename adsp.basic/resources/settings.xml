@@ -2,4 +2,5 @@
 <settings>
     <setting id="master_stereo" type="bool" label="30006" default="true" />
     <setting id="speaker_correction" type="bool" label="30007" default="true" />
+    <setting id="stereo_to_ms" type="bool" label="30008" default="true" />
 </settings>
