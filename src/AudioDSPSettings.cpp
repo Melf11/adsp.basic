@@ -27,6 +27,7 @@
 
 #include "AudioDSPSettings.h"
 #include "GUIDialogSpeakerGain.h"
+#include "GUIDialogStereoToMS.h"
 
 using namespace std;
 using namespace ADDON;
@@ -133,7 +134,7 @@ bool CDSPSettings::LoadSettingsData(int settingId, bool initial)
   }
 
   TiXmlElement *pElement = NULL;
-  if (settingId < 0 || settingId == ID_MENU_SPEAKER_GAIN_SETUP || settingId == ID_MENU_SPEAKER_DISTANCE_SETUP)
+  if (settingId < 0 || settingId == ID_MENU_SPEAKER_GAIN_SETUP || settingId == ID_MENU_SPEAKER_DISTANCE_SETUP|| settingId == ID_MENU_STEREO_TO_MS)
   {
     pElement = pRootElement->FirstChildElement("channels");
     if (pElement)
