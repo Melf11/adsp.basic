@@ -207,6 +207,7 @@ protected:
   unsigned int             m_SpeakerDelay[AE_DSP_CH_MAX];
   unsigned int             m_SpeakerDelayMax;
   bool                     m_SpeakerCorrection;
+  bool                     m_StereoToMS;
   unsigned long            m_outChannelPresentFlags;
 
   P8PLATFORM::CMutex         m_Mutex;

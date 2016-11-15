@@ -22,9 +22,11 @@
 
 #define ID_MENU_SPEAKER_GAIN_SETUP                      1
 #define ID_MENU_SPEAKER_DISTANCE_SETUP                  2
+#define ID_MENU_STEREO_TO_MS                            3
 
 #define ID_MASTER_PROCESS_STEREO_DOWNMIX                1300
 #define ID_POST_PROCESS_SPEAKER_CORRECTION              1400
+#define ID_POST_PROCESS_STEREO_TO_MS                    1500
 
 class CDSPProcessMaster
 {
